@@ -1,14 +1,14 @@
 #include "ej1.h"
 
 string_proc_list* string_proc_list_create(void){
-	string_proc_list* nuevo = malloc(sizeof(string_proc_list));
+	string_proc_list* nuevo = malloc(16);
 	nuevo->first = NULL;
 	nuevo->last = NULL;
 	return nuevo;
 }
 
 string_proc_node* string_proc_node_create(uint8_t type, char* hash){
-	string_proc_node* nuevo = malloc(sizeof(string_proc_node));
+	string_proc_node* nuevo = malloc(32);
 	nuevo->type = type;
 	nuevo->hash = hash;
 	nuevo->next = NULL;
@@ -24,12 +24,12 @@ void string_proc_list_add_node(string_proc_list* list, uint8_t type, char* hash)
 		list->last->next = nuevo;
 		nuevo->previous = list->last;
 	}
-	
+
 	list->last = nuevo;
+
+		
 	if (list->first == NULL) list->first = nuevo;
 }
-
-char* str_concat(char* a, char* b);
 
 char* string_proc_list_concat(string_proc_list* list, uint8_t type , char* hash){
 	string_proc_node* actual = list->first;
