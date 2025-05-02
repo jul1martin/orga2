@@ -20,6 +20,13 @@ typedef struct pago {
   uint8_t aprobado;
 } pago_t; 
 
+/*
+PAGO_MONTO 0
+PAGO_COMERCIO 8
+PAGO_CLIENTE 16
+PAGO_APROBADO 17
+PAGO_SIZE 24
+*/
 
 uint32_t* acumuladoPorCliente(uint8_t cantidadDePagos, pago_t* arr_pagos);
 uint32_t* acumuladoPorCliente_asm(uint8_t cantidadDePagos, pago_t* arr_pagos);
