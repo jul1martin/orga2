@@ -155,11 +155,11 @@ blacklistComercios_asm:
 
 		xor rbx, rbx ; pagos = NULL
 
-		mov qword [rbp + 8], 0 ; i
-		mov qword [rbp + 16], 0 ; index pagos
+		mov qword [rbp - 0x40], 0 ; i
+		mov qword [rbp - 0x48], 0 ; index pagos
 	.loop:
 		xor rsi, rsi
-		mov rsi, qword [rbp + 8]
+		mov rsi, qword [rbp - 0x40]
 		imul rsi, PAGO_SIZE
 
 		mov rdi, [r14 + rsi + PAGO_COMERCIO] 
@@ -174,7 +174,7 @@ blacklistComercios_asm:
 
 		mov rdi, rbx
 		
-		mov sil, BYTE [rbp + 16] ; index pagos
+		mov sil, BYTE [rbp - 0x48] ; index pagos
 		movzx rsi, sil
 		inc rsi
 		imul rsi, PAGO_SIZE ; PAGO_SIZE + index_pagos + 1
@@ -183,17 +183,17 @@ blacklistComercios_asm:
 
 		mov rbx, rax
 
-		mov rdi, qword [rbp + 16] ; index_pagos
-		mov rsi, qword [rbp + 8]  ; i
+		mov rdi, qword [rbp - 0x48] ; index_pagos
+		mov rsi, qword [rbp - 0x40]  ; i
 		imul rsi, 8
 		add rsi, r14
 
 		mov [rbx + rdi * 8], rsi 
 
-		inc BYTE [rbp + 16] ; index_pagos++
+		inc BYTE [rbp - 0x48] ; index_pagos++
 	.nextIt:
-		inc qword [rbp + 8] ; i++
-		cmp qword [rbp + 8], r15 ; condicion for
+		inc qword [rbp - 0x40] ; i++
+		cmp qword [rbp - 0x40], r15 ; condicion for
 		jne .loop
 
 	.epilogo:
