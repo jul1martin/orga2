@@ -134,6 +134,8 @@ blacklistComercios_asm:
 	push rbp
 	mov rbp, rsp ; alineado
 
+	sub rsp, 16 ; alineado
+
 	push r15
 	push r14 ; alineado
 
@@ -142,8 +144,6 @@ blacklistComercios_asm:
 	
 	push rbx 
 	sub rsp, 8; alineado
-
-	sub rsp, 16 ; alineado
 
 	.func:
 		mov r15, rdi ; cantidad_pagos
@@ -155,14 +155,14 @@ blacklistComercios_asm:
 
 		xor rbx, rbx ; pagos = NULL
 
-		mov qword [rbp - 0x40], 0 ; i
-		mov qword [rbp - 0x48], 0 ; index pagos
+		mov BYTE [rbp - 8], 0 ; i
+		mov BYTE [rbp - 16], 0 ; index pagos
 	.loop:
-		xor rsi, rsi
-		mov rsi, qword [rbp - 0x40]
-		imul rsi, PAGO_SIZE
+		mov sil, BYTE [rbp - 8]
+		movzx rsi, sil
+		imul rsi, PAGO_SIZE ; pago[i] 
 
-		mov rdi, [r14 + rsi + PAGO_COMERCIO] 
+		mov rdi, [r14 + rsi + PAGO_COMERCIO] ; pago[i].comercio
 		mov rsi, r13 ; arr_comercios
 		mov rdx, r12 ; size_comercios
 		
@@ -172,33 +172,36 @@ blacklistComercios_asm:
 		cmp rax, 0 ; en_blacklist == true
 		je .nextIt ; sigo
 
-		mov rdi, rbx
+		xor rdi, rdi ; = 0
+		mov rdi, rbx ; = pagos actual
 		
-		mov sil, BYTE [rbp - 0x48] ; index pagos
-		movzx rsi, sil
-		inc rsi
-		imul rsi, PAGO_SIZE ; PAGO_SIZE + index_pagos + 1
-		
+		mov sil, BYTE [rbp - 16] ; index pagos
+		movzx rsi, sil ; extiendo
+		inc rsi ; (index_pagos + 1)
+		imul rsi, 8 ; sizeof(pago_t*) * (index_pagos + 1)
+
 		call realloc
 
-		mov rbx, rax
+		xor rbx, rbx ; limpio
+		mov rbx, rax ; pagos = realloc
 
-		mov rdi, qword [rbp - 0x48] ; index_pagos
-		mov rsi, qword [rbp - 0x40]  ; i
-		imul rsi, 8
-		add rsi, r14
+		mov dil, BYTE [rbp - 16] ; index_pagos
+		movzx rdi, dil
+		mov sil, BYTE [rbp - 8]  ; i
+		movzx rsi, sil
+		imul rsi, PAGO_SIZE
+		add rsi, r14 ; offset &arr_pagos[i]
 
-		mov [rbx + rdi * 8], rsi 
+		mov [rbx + rdi * 8], rsi ; pagos[index_pagos] = (pago_t*) &arr_pagos[i]; 
 
-		inc BYTE [rbp - 0x48] ; index_pagos++
+		inc BYTE [rbp - 16] ; index_pagos++
 	.nextIt:
-		inc qword [rbp - 0x40] ; i++
-		cmp qword [rbp - 0x40], r15 ; condicion for
+		inc BYTE [rbp - 8] ; i++
+		cmp BYTE [rbp - 8], r15b ; condicion for
 		jne .loop
 
 	.epilogo:
 		mov rax, rbx
-		add rsp, 16
 
 		add rsp, 8
 		pop rbx
@@ -208,6 +211,8 @@ blacklistComercios_asm:
 
 		pop r14
 		pop r15
+
+		add rsp, 16
 
 		pop rbp
 
