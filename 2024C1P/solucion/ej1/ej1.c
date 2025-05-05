@@ -44,6 +44,7 @@ void ordenar_display_list(ordering_table_t* ot, nodo_display_list_t* display_lis
     }
   }
 
+  nodo_ot_t* newNode =  
   node->display_element = display_list;
   node->siguiente = NULL;
 
