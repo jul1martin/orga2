@@ -1,0 +1,95 @@
+1) a)
+
+Necesito 
+mapear la memoria de 0xbabab0000 hasta 0xbabab0000 + 4kb
+en la page directory de la tarea que me dan
+
+Estara presente, se podra escribir solo por el lector de cartuchos
+que significa? 
+Como puedo especificar que solo lo haga el lector?
+significa que solo puedo pedir la lectura desde el kernel?
+Si es asi, tengo que pedir que lo paginado tiene que ser de sistema nomas
+
+Modo DMA? Es el sistema que siempre trabajamos basicamente, puro beit
+
+1. Mapear pagina a la direccion fisica del buffer, 
+como presente y de sistema (como son perifericos necesito 
+que solamente lo lea el kernel, sumado a lo que pide la consigna).
+2. Se usa void mmu_map_page
+(uint32_t cr3, vaddr_t virt, paddr_t phy, uint32_t attrs) 
+cr3 -> Cual? Me estan proporcionando la PD, (la que sacaria del cr3) 
+-> Podria yo armar la cr3? 
+ pd << 12 ? Para que quede en los 20 bits mas relevantes
+virt -> 0xBABAB000
+phy -> OxF151C000
+attrs -> MMU_P, MMU_SYSTEM, MMU_W -> 0x111
+3. Nada mas (miedo) -> return;
+
+
+void buffer_dma(pd_entry_t* pd) {
+     /*
+     Resumen mmu_map_page()
+     Utilizo funcion del TP, se encarga de mapear una pagina de memoria con los atributos que yo indique 
+     en el Page directory que yo indique (la saca del cr3)
+
+     Si ya no esta mapeada 
+     -> entra, obtiene la proxima pagina de kernel libre
+     ->La limpia si ya existia
+     
+     Luego sigue
+     Marca la pag como presente
+     Resetea la TLB para que no se puedan usar las paginas cacheadas 
+     */
+     vaddr_t virt = 0xBABAB000 
+     paddr_t phy = OxF151C000 
+     mmu_map_page((&pd << 12), virt, phy, MMU_P|MMU_SYSTEM|MMU_SYSTEM);
+
+     return;
+}
+
+Dir virtual donde voy a copiar todo
+#define DST_VIRT_PAGE 0xA00000 
+Dir donde tengo que mapear la direccion virtual
+#define SRC_VIRT_PAGE 0xBABAB000
+
+Tengo mi funcion del tp copy_page, tendria que acomodar los parametrosi
+/* Podria agregar a copy_page un argumento que sea el cr3 que necesito especificamente, 
+ahora lo que hago es usar rcr3, no me sirve 
+en este caso debido a que no tengo que usar el pd actual sino el pd que se me indique
+*/
+cr3-> misma idea
+dst_addr -> dir fisica a la que quiero copiar (argumento de buffer_copy)
+src_addr -> dir fisica de donde se encuentra el buffer de video
+void buffer_copy(pd_entry_t* pd, paddr_t phys) {
+     copy_page(&pd << 12, phys, 0xF151C000);
+
+     return;
+}
+
+---------------------------------------------------------------------
+
+
+EJERCICIO 2
+
+Viendo por arriba necesito un par de cosas
+Definir la entrada de la interrupcion en la IDT_ENTRY0()
+Es de privilegio ya que es algo que podra hacer el hardware lector de cartuchos
+Luego hacer la interrupcion 40 en isr.asm
+
+deviceready-> Se fijara la direccion indicada y devolvera el valor de 8 bits que corresponda
+Si es 0-> No hace Nada
+Si es 1 -> DMA
+Si es 2 -> x copia
+
+_isr40:
+    pushad
+    ; 1. Le decimos al PIC que vamos a atender la interrupción
+    call pic_finish1
+;    push eax
+;    call tasks_input_process
+;    add esp, 4
+
+
+    .fin:
+          popad
+          iret
